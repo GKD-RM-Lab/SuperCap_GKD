@@ -15,9 +15,9 @@ struct TempData
 {
     float outputDuty            = 1.0f;
     float baseRefereePower      = DEFAULT_REFEREE_POWER;
-    float targetRefereePower    = DEFAULT_REFEREE_POWER;
+    float targetRefereePower    = DEFAULT_REFEREE_POWER;    //限制功率
     float lastRefereePowerLimit = DEFAULT_REFEREE_POWER;
-    float targetAPower          = 0.0f;
+    float targetAPower          = 0.0f; //电流环中关键，用来计算出targetIA;对它做限制
     float targetIA              = 0.0f;
     uint16_t ledBlinkCnt        = 0;
 } tempData;
@@ -346,6 +346,7 @@ static void handleErrorState()
     }
     else
     {
+        ControlData::controlData.enableOutput = true;  //打开输出，校准电流
         errorCheckData.currentError &= ~ERROR_UNDER_VOLTAGE;
         Status::status.errorCode &= ~ERROR_UNDER_VOLTAGE;
     }
@@ -649,19 +650,19 @@ static inline void updatePWM(float VBToVA)
             pwmDutyVariable.buckBoostMode = true;
     }
 
-    if (pwmDutyVariable.buckBoostMode)
+    if (pwmDutyVariable.buckBoostMode)  // Buck-Boost
     {
         pwmDutyVariable.dutyA = (VBToVA + 1.0f) * 0.4f;
         pwmDutyVariable.dutyB = (1.0f / VBToVA + 1.0f) * 0.4f;
     }
     else
     {
-        if (VBToVA < 1)
+        if (VBToVA < 1) //从左到右Buck
         {
             pwmDutyVariable.dutyA = 0.9f * VBToVA;
             pwmDutyVariable.dutyB = 0.9f;
         }
-        else
+        else    //从左到右Boost
         {
             pwmDutyVariable.dutyA = 0.9f;
             pwmDutyVariable.dutyB = 0.9f / VBToVA;
@@ -684,15 +685,22 @@ static inline void updateVIP()
 #ifndef CALIBRATION_MODE
     if (Status::status.outputEnabled)  //[[likely]]
     {
-        float tempVASide = SampleManager::ProcessedData::processedData.vASide;
+        /***
+
+        （裁判系统能量缓冲环）--> 功率环 --> 电流环||电压环
+        targetRefereePower (--> targetAPower) --> targetIA --> iaDuty 电流环
+        
+        */
+
+        float tempVASide = SampleManager::ProcessedData::processedData.vASide;  //此时的瞬时VA
 
         float absIA        = M_MIN(M_ABS(SampleManager::ProcessedData::processedData.iASide), 0.1f);
         float absIB        = M_MIN(M_ABS(SampleManager::ProcessedData::processedData.iBSide), 0.1f);
         float actualIAtoIB = absIA / absIB;
 
-        pidPowerReferee.update(tempData.targetRefereePower, SampleManager::ProcessedData::processedData.pReferee);
+        pidPowerReferee.update(tempData.targetRefereePower, SampleManager::ProcessedData::processedData.pReferee);  //期望， 实际
 
-        tempData.targetAPower += pidPowerReferee.getDeltaOutput();
+        tempData.targetAPower += pidPowerReferee.getDeltaOutput();  //次外环 功率环
 
         float tempCapOutILimit;
         float tempCapInILimit        = I_LIMIT;
@@ -727,22 +735,22 @@ static inline void updateVIP()
 
         if (tempData.targetAPower < powerLimitBToA)
         {
-            tempData.targetAPower = powerLimitBToA;
+            tempData.targetAPower = powerLimitBToA; //下限
             if (tempData.baseRefereePower > ControlData::controlData.refereePowerLimit + 3.0f)
                 tempData.baseRefereePower = ControlData::controlData.refereePowerLimit + 3.0f;
         }
         else if (tempData.targetAPower > powerLimitAToB)
         {
-            tempData.targetAPower = powerLimitAToB;
+            tempData.targetAPower = powerLimitAToB; //上限
             if (tempData.baseRefereePower > ControlData::controlData.refereePowerLimit + 3.0f)
                 tempData.baseRefereePower = ControlData::controlData.refereePowerLimit + 3.0f;
         }
 
         tempData.targetIA = tempData.targetAPower / tempVASide;
 
-        pidCurrentA.update(tempData.targetIA, SampleManager::ProcessedData::processedData.iASide);
+        pidCurrentA.update(tempData.targetIA, SampleManager::ProcessedData::processedData.iASide);  //电流环
 
-        static float extraErrorSum = 0;
+        static float extraErrorSum = 0;     //???
         static float kII           = 1.1e-05f;
         //        static volatile float kII = 0;
         static float iiDecay = 0.988f;
@@ -752,16 +760,17 @@ static inline void updateVIP()
             extraErrorSum = M_CLAMP(extraErrorSum, -500, 500);
         }
 
-        float iaDuty = tempData.outputDuty + (pidCurrentA.getDeltaOutput() + kII * extraErrorSum);
+        float iaDuty = tempData.outputDuty + (pidCurrentA.getDeltaOutput() + kII * extraErrorSum);  //电流环计算Duty
 
-        if (SampleManager::ProcessedData::processedData.vBSide > MAX_CAP_VOLTAGE * 0.9f)
+
+        if (SampleManager::ProcessedData::processedData.vBSide > MAX_CAP_VOLTAGE * 0.9f)    //电容组电压较高
         {
             pidVoltageB.update(MAX_CAP_VOLTAGE, SampleManager::ProcessedData::processedData.vBSide);
 
-            static volatile float vbDuty = 1;
+            static volatile float vbDuty = 1;   //电压环计算Duty 与电流环竞争
             vbDuty                       = (tempData.outputDuty * SampleManager::ProcessedData::processedData.vASide + pidVoltageB.getDeltaOutput()) /
-                     SampleManager::ProcessedData::processedData.vASide;
-            if (vbDuty < iaDuty)
+                     SampleManager::ProcessedData::processedData.vASide;    // =outputDuty + deltaOutput ÷ vASide
+            if (vbDuty < iaDuty)    //两环竞争，选择占空比较小的作为输出
             {
                 tempData.outputDuty = vbDuty;
                 extraErrorSum       = 0;
@@ -776,7 +785,7 @@ static inline void updateVIP()
         else
         {
             pidVoltageB.updateDataNoOutput(MAX_CAP_VOLTAGE, SampleManager::ProcessedData::processedData.vBSide);
-            tempData.outputDuty = iaDuty;
+            tempData.outputDuty = iaDuty;   //电流环（电容组电压不高的一般情况）
         }
 
         tempData.outputDuty = M_CLAMP(tempData.outputDuty, 0.05f, 10.0f);
@@ -858,7 +867,7 @@ static inline void updateStatus()
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
 }
 
-void updateEnergy()
+void updateEnergy() //Can
 {
     if (tempData.lastRefereePowerLimit != ControlData::controlData.refereePowerLimit)
     {
@@ -871,7 +880,7 @@ void updateEnergy()
         if (Status::status.communicationTimeoutCnt < 80)
             return;
         PowerManager::Status::status.communicationTimeoutCnt = 0;
-        pidEnergyReferee.update(ENERGY_BUFFER, ControlData::controlData.energyRemain);
+        pidEnergyReferee.update(ENERGY_BUFFER, ControlData::controlData.energyRemain);  //最外环 能量缓冲环
         tempData.baseRefereePower -= pidEnergyReferee.getDeltaOutput();
         tempData.baseRefereePower = M_CLAMP(tempData.baseRefereePower, 10.0f, ControlData::controlData.refereePowerLimit + 30.0f);
     }
@@ -987,6 +996,7 @@ extern "C"
         ErrorChecker::handleShortCircuit();
 
         updateVIP();
+        // updatePWM(1);   //校准IA、IB
 
         if (__HAL_HRTIM_MASTER_GET_FLAG(&hhrtim1, HRTIM_MASTER_FLAG_MREP) != RESET)  // blocking detected
         {

@@ -9,4 +9,4 @@
 
 #define M_ABS(x) ((x) < 0 ? -(x) : (x))
 
-#define M_CLAMP(x, min, max) (M_MIN((max), M_MAX((min), (x))))
+#define M_CLAMP(x, min, max) (M_MIN((max), M_MAX((min), (x))))  //X钳制到min~max之间

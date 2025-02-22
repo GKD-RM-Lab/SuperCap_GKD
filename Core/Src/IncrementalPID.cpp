@@ -28,7 +28,7 @@ void IncrementalPID::update(float target, float measurement)
     this->lastMeasurement     = measurement;
 }
 
-void IncrementalPID::updateDataNoOutput(float target, float measurement)
+void IncrementalPID::updateDataNoOutput(float target, float measurement)    //只更新数据，不更新输出
 {
     this->lastTarget          = target;
     this->lastLastMeasurement = this->lastMeasurement;
