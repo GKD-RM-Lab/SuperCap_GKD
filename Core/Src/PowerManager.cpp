@@ -14,7 +14,7 @@ Status::Status() : outputEnabled(false), errorCode(0), capEnergy(0.0f), chassisP
 struct TempData
 {
     float outputDuty            = 1.0f;
-    float baseRefereePower      = DEFAULT_REFEREE_POWER;
+    float baseRefereePower      = DEFAULT_REFEREE_POWER;    //updateEnergy()时target<-base
     float targetRefereePower    = DEFAULT_REFEREE_POWER;    //限制功率
     float lastRefereePowerLimit = DEFAULT_REFEREE_POWER;
     float targetAPower          = 0.0f; //电流环中关键，用来计算出targetIA;对它做限制
@@ -872,7 +872,7 @@ void updateEnergy() //Can
     if (tempData.lastRefereePowerLimit != ControlData::controlData.refereePowerLimit)
     {
         tempData.lastRefereePowerLimit = ControlData::controlData.refereePowerLimit;
-        tempData.baseRefereePower += ControlData::controlData.refereePowerLimit - tempData.targetRefereePower;
+        tempData.baseRefereePower += ControlData::controlData.refereePowerLimit - tempData.targetRefereePower;      //...?
         pidPowerReferee.reset();
     }
     if (ControlData::controlData.energyRemain > ENERGY_BUFFER / 2.0f)

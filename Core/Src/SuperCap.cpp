@@ -56,11 +56,12 @@ void init()
     if (hardwareID != (uint32_t)HARDWARE_ID)
     {
 #ifdef CALIBRATION_MODE
+        
         while (HAL_FLASH_OB_Unlock() != HAL_OK)  // unlock flash option bytes
-            __ASM volatile("bkpt ");
+        __ASM volatile("bkpt ");
 
         while (HAL_FLASHEx_OBErase() != HAL_OK)  // erase option bytes
-            __ASM volatile("bkpt ");
+        __ASM volatile("bkpt ");
 
         FLASH_OBProgramInitTypeDef pOBInit;
         pOBInit.OptionType  = OPTIONBYTE_WRP | OPTIONBYTE_RDP | OPTIONBYTE_USER | OPTIONBYTE_DATA;
@@ -71,14 +72,41 @@ void init()
         pOBInit.DATAAddress = OB_DATA_ADDRESS_DATA0;
         pOBInit.DATAData    = (uint8_t)HARDWARE_ID;        // set hardware id
 
-        while (HAL_FLASHEx_OBProgram(&pOBInit) != HAL_OK)  // program option bytes
-            __ASM volatile("bkpt ");
+        HAL_FLASH_Unlock();
+        HAL_FLASH_OB_Unlock();
+        FLASH_OBProgramInitTypeDef obData;
+        HAL_FLASHEx_OBGetConfig(&obData);
+        HAL_FLASHEx_OBErase();
+        obData.DATAAddress = OB_DATA_ADDRESS_DATA0;
+        obData.DATAData = (uint8_t)HARDWARE_ID; 
+        obData.OptionType = OPTIONBYTE_DATA;
+        while ( (HAL_FLASHEx_OBProgram(&obData)) != HAL_OK)
+        hardwareID = HAL_FLASHEx_OBGetUserData(OB_DATA_ADDRESS_DATA0);
 
-        while (HAL_FLASH_OB_Lock() != HAL_OK)  // lock flash option bytes
-            __ASM volatile("bkpt ");
 
-        while (HAL_FLASH_OB_Launch() != HAL_OK)  // launch option bytes
-            __ASM volatile("bkpt ");
+        // while (HAL_FLASH_OB_Unlock() != HAL_OK)  // unlock flash option bytes
+        //     __ASM volatile("bkpt ");
+
+        // while (HAL_FLASHEx_OBErase() != HAL_OK)  // erase option bytes
+        //     __ASM volatile("bkpt ");
+
+        // FLASH_OBProgramInitTypeDef pOBInit;
+        // pOBInit.OptionType  = OPTIONBYTE_WRP | OPTIONBYTE_RDP | OPTIONBYTE_USER | OPTIONBYTE_DATA;
+        // pOBInit.WRPState    = OB_WRPSTATE_DISABLE;
+        // pOBInit.WRPPage     = 0xFFFFFFFF;
+        // pOBInit.RDPLevel    = OB_RDP_LEVEL_0;
+        // pOBInit.USERConfig  = OB_IWDG_SW | OB_STOP_NO_RST | OB_STDBY_NO_RST | OB_BOOT1_RESET | OB_VDDA_ANALOG_ON | OB_SRAM_PARITY_RESET;
+        // pOBInit.DATAAddress = OB_DATA_ADDRESS_DATA0;
+        // pOBInit.DATAData    = (uint8_t)HARDWARE_ID;        // set hardware id
+
+        // while (HAL_FLASHEx_OBProgram(&pOBInit) != HAL_OK)  // program option bytes
+        //     __ASM volatile("bkpt ");
+
+        // while (HAL_FLASH_OB_Lock() != HAL_OK)  // lock flash option bytes
+        //     __ASM volatile("bkpt ");
+
+        // while (HAL_FLASH_OB_Launch() != HAL_OK)  // launch option bytes
+        //     __ASM volatile("bkpt ");
 
 #endif
         Buzzer::play(1000);

@@ -21,7 +21,7 @@
 #include "main.h"
 #include "tim.h"
 
-#define ERROR_UNDER_VOLTAGE 0b00000001  //VASide<12 && VBSide<12
+#define ERROR_UNDER_VOLTAGE 0b00000001  //VASide<12 && VBSide<12(校准)，VASide<15 && VBSide<12(正常)
 #define ERROR_OVER_VOLTAGE 0b00000010
 #define ERROR_BUCK_BOOST 0b00000100
 #define ERROR_SHORT_CIRCUIT 0b00001000
