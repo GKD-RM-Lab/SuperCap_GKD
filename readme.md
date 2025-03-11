@@ -3,11 +3,12 @@
 - 致谢开源队伍：香港科技大学ENTERPRIZE战队
 
 >制作调试：聂亦飞 于泽源
+>
 >此文档撰写：于泽源
 
 ## 历代超电
 
-RM2024方案[这里](https://github.com/GKD-RM-Lab/RM_supercap-control-module)
+RM2024方案-->[这里](https://github.com/GKD-RM-Lab/RM_supercap-control-module)
 
 ## 文件结构
 
@@ -29,10 +30,17 @@ Makefile                                          ----由CubeMX生成的MakeFile
 ### 步骤
 
 1. 硬件准备。很重要，若复现时出问题大概率是硬件问题，检查焊接、器件型号等。因为方案已经过验证基本没有问题。
-2. 代码跑起来。能够成功下载程序，仅用电脑供电即可，指示灯、蜂鸣器提示正常。
-3. 检查系统供电。24V供电，检查24V --> 10.2V -->3.3V
-4. 校准。通过宏定义`CALIBRATION_MODE`开启/关闭校准模式，先校准电压，再用负载仪校准电流。确保各项电流、电压采样正常，否则不要上功率和电容组。
-5. 上功率调试。
+2. 代码跑起来。先用电脑USB供电即可，能够成功下载程序，指示灯、蜂鸣器提示正常。
+3. 检查系统供电。接24V供电，检查24V --> 10.2V -->3.3V。确保供电正常且稳定。
+4. 校准。通过宏定义`CALIBRATION_MODE`开启/关闭校准模式。先校准电压，再用负载仪恒流模式校准电流。确保各项电流、电压采样正常，否则不要上功率和电容组。
+   ![Topology.png](Docs/Topology.png)
+   一个超电系统对应一个HARDWARE_ID。
+5. 上功率调试。先用可调电源和负载仪恒压模式调电流环，再用恒功率模式测试功率环。若确定硬件没什么问题，直接用恒功率模式测试也问题不大。
+6. 通信测试。与上位机CAN通信，通过上位机设置限制功率、上位机接收超电反馈底盘功率等。
+7. 装车！
+
+- 一定小心电容组不要以任何形式短接！！否则超级电容瞬间变电焊
+- （有一次想测量电容组剩余电压，不小心两个表笔碰了一下，笔尖瞬间无了。。
 
 ### 硬件接口&连接
 
@@ -68,11 +76,11 @@ VScode + STLink
    openocd -f interface/stlink.cfg -f target/stm32f3x.cfg -c "init" -c "halt" -c "program build/RM2024-SuperCap-F3-V1R.bin 0x08000000 verify" -c "reset run" -c "exit"`
    ```
 
-   - 或者可以将编译和烧录命令写入.sh文件，每次只需使用命令以下即可！
+- 或者可以将编译和烧录命令写入.sh文件，每次只需使用命令以下即可！
 
-   ```bash
-   bash xxx.sh
-   ```
+```bash
+bash flash.sh
+```
 
 至此就可以开始调试了！
 
@@ -80,7 +88,7 @@ VScode + STLink
 
 Ozone(推荐) + JLink
 
-- 推荐理由：配置简单；Ozone调试器支持监视变量实时刷新，且可以设置刷新频率1/2/5Hz
+- 推荐理由：配置简单；Ozone调试器支持监视变量实时刷新；自带变量可视化绘图功能
 
 1. 安装GCC环境。同方法一。(也可选择MSYS2等，自行学习)
 2. 安装`arm-none-eabi-gcc`
@@ -92,8 +100,10 @@ Ozone(推荐) + JLink
 
    得到`build/`目录下`RM2024-SuperCap-F3-V1R.elf`文件即为编译成功。
    将elf文件在ozone新建项目中打开，即可通过JLink烧录至MCU中。
+   ![Ozone1.png](Docs/Ozone1.png) ![Ozone2.png](Docs/Ozone2.png)
 
 ## 原港科大开源链接
 
 RM2023-SuperCapacitor[这里](https://github.com/hkustenterprize/RM2023-SuperCapacitor)
+
 RM2024-SuperCapacitorController[这里](https://github.com/hkustenterprize/RM2024-SuperCapacitorController)
