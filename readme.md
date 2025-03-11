@@ -100,7 +100,9 @@ Ozone(推荐) + JLink
 
    得到`build/`目录下`RM2024-SuperCap-F3-V1R.elf`文件即为编译成功。
    将elf文件在ozone新建项目中打开，即可通过JLink烧录至MCU中。
-   ![Ozone1.png](Docs/Ozone1.png) ![Ozone2.png](Docs/Ozone2.png)
+
+   ![Ozone1.png](Docs/Ozone1.png)
+   ![Ozone2.png](Docs/Ozone2.png)
 
 ## 原港科大开源链接
 
