@@ -4,7 +4,7 @@
 #error "please specify hardware id"
 #endif
 
-// #define CALIBRATION_MODE
+#define CALIBRATION_MODE
 #define IGNORE_CAPACITOR_ERROR
 
 #if (HARDWARE_ID == -1)
@@ -73,20 +73,20 @@
 
 #elif (HARDWARE_ID == 201)
 
-#define VA_GAIN 0.008062755f
-#define VA_BIAS 0.007458192f
+#define VA_GAIN 0.008125577f
+#define VA_BIAS 0.181902124f
 
-#define VB_GAIN 0.008073042f
-#define VB_BIAS 0.024449784f
+#define VB_GAIN 0.008163265f
+#define VB_BIAS (-0.051020408f)
 
-#define I_REFEREE_GAIN (0.020421187f)
-#define I_REFEREE_BIAS (-41.79514997f)
+#define I_REFEREE_GAIN 0.020512821f
+#define I_REFEREE_BIAS (-41.997f)
 
-#define I_A_CONVERT_GAIN (0.020068807f)
-#define I_A_CONVERT_BIAS (-41.05332569f)
+#define I_A_CONVERT_GAIN 0.020293671f
+#define I_A_CONVERT_BIAS (-41.55629114f)
 
-#define I_B_CONVERT_GAIN (-0.020080321f)
-#define I_B_CONVERT_BIAS 41.05220884f
+#define I_B_CONVERT_GAIN (-0.02031746f)
+#define I_B_CONVERT_BIAS 41.54603175f
 
 #elif (HARDWARE_ID == 202)
 
