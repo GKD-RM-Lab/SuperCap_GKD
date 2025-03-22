@@ -4,7 +4,7 @@
 #error "please specify hardware id"
 #endif
 
-#define CALIBRATION_MODE
+// #define CALIBRATION_MODE
 #define IGNORE_CAPACITOR_ERROR
 
 #if (HARDWARE_ID == -1)
@@ -34,20 +34,20 @@
 
 // todo: set calibration values
 
-#define VA_GAIN 0.00816285f
-#define VA_BIAS 0.041628499f
+#define VA_GAIN 0.008171604f
+#define VA_BIAS 0.016343207f
 
-#define VB_GAIN 0.008101058f
-#define VB_BIAS 0.337133787f
+#define VB_GAIN 0.008097166f
+#define VB_BIAS 0.042510121f
 
-#define I_REFEREE_GAIN 0.020421187f
-#define I_REFEREE_BIAS (-41.79514997f)
+#define I_REFEREE_GAIN 0.020512821f
+#define I_REFEREE_BIAS (-41.98717949f)
 
-#define I_A_CONVERT_GAIN 0.020214782f
-#define I_A_CONVERT_BIAS (-41.35754896f)
+#define I_A_CONVERT_GAIN 0.020387755f
+#define I_A_CONVERT_BIAS (-41.74912245f)
 
-#define I_B_CONVERT_GAIN (-0.020291693f)
-#define I_B_CONVERT_BIAS 41.4895371f
+#define I_B_CONVERT_GAIN (-0.020253165f)
+#define I_B_CONVERT_BIAS 41.43037975f
 
 // I_REFEREE should have (REFEREESystem -> DCDC_ASide) as positive
 // I_Chassis should have (Chassis -> DCDC_ASide) as positive
@@ -73,20 +73,20 @@
 
 #elif (HARDWARE_ID == 201)
 
-#define VA_GAIN 0.008125577f
-#define VA_BIAS 0.181902124f
+#define VA_GAIN 0.008076729f
+#define VA_BIAS 0.037354871f
 
-#define VB_GAIN 0.008163265f
-#define VB_BIAS (-0.051020408f)
+#define VB_GAIN 0.008121827f
+#define VB_BIAS 0.040609137f
 
-#define I_REFEREE_GAIN 0.020512821f
-#define I_REFEREE_BIAS (-41.997f)
+#define I_REFEREE_GAIN 0.020382166f
+#define I_REFEREE_BIAS (-41.70063694f)
 
-#define I_A_CONVERT_GAIN 0.020293671f
-#define I_A_CONVERT_BIAS (-41.55629114f)
+#define I_A_CONVERT_GAIN 0.020110831f
+#define I_A_CONVERT_BIAS (-41.13824685f)
 
-#define I_B_CONVERT_GAIN (-0.02031746f)
-#define I_B_CONVERT_BIAS 41.54603175f
+#define I_B_CONVERT_GAIN (-0.020253165f)
+#define I_B_CONVERT_BIAS 41.41772152f
 
 #elif (HARDWARE_ID == 202)
 

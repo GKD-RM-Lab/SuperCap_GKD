@@ -1,7 +1,11 @@
 #include "PowerManager.hpp"
+#include <ostream>
+#include <iostream>
 
 namespace PowerManager
 {
+
+uint8_t AB = 0;
 
 ControlData ControlData::controlData;
 
@@ -294,6 +298,7 @@ static void handleShortCircuit()
     {
         if (M_ABS(SampleManager::ProcessedData::processedData.iASide) > SHORT_CIRCUIT_CURRENT)
         {
+            PowerManager::AB = 1;
             errorCheckData.currentError |= ERROR_SHORT_CIRCUIT;
             Status::status.errorCode |= ERROR_SHORT_CIRCUIT;
             if (TimerManager::getHRTIMOutputState() == true)
@@ -315,8 +320,10 @@ static void handleShortCircuit()
     {
         if (M_ABS(SampleManager::ProcessedData::processedData.iBSide) > SHORT_CIRCUIT_CURRENT)
         {
+            PowerManager::AB = 2;
             errorCheckData.currentError |= ERROR_SHORT_CIRCUIT;
             Status::status.errorCode |= ERROR_SHORT_CIRCUIT;
+            // std::cout << "BSide" << std::endl;
             if (TimerManager::getHRTIMOutputState() == true)
             {
                 if (errorCheckData.shortCircuitCnt++ > 5)
@@ -346,7 +353,7 @@ static void handleErrorState()
     }
     else
     {
-        ControlData::controlData.enableOutput = true;  //打开输出，校准电流
+        ControlData::controlData.enableOutput = true;  //根据校准时需要，手动打开输出
         errorCheckData.currentError &= ~ERROR_UNDER_VOLTAGE;
         Status::status.errorCode &= ~ERROR_UNDER_VOLTAGE;
     }
@@ -466,7 +473,7 @@ static void handleErrorState()
      * capacitor will be very large. The charge will be monitored, if the charge is too large, the capacitor is considered to be shorted or
      * overcharged.
      */
-    errorCheckData.capVoltageChange += ProcessedSampleData::processedSampleData.vBSide - errorCheckData.lastCapVoltage;
+    errorCheckData.capVoltageChange += ProcessedSampleData::processedSampleData.vBSide - errorCheckData.lastCapVoltage; //deltaV
     errorCheckData.lastCapVoltage = ProcessedSampleData::processedSampleData.vBSide;
     if (errorCheckData.capVoltageChange > 3.0f || errorCheckData.capVoltageChange < -3.0f)
     {
@@ -708,7 +715,7 @@ static inline void updateVIP()
         constexpr float MAX_CAP_IOUT = I_LIMIT;
         constexpr float CAP_V_CUTOFF = 5.0f;
         constexpr float CAP_V_NORMAL = 12.0f;
-        if (SampleManager::ProcessedData::processedData.vBSide < CAP_V_CUTOFF)
+        if (SampleManager::ProcessedData::processedData.vBSide < CAP_V_CUTOFF)  //超电模组电压较低
         {
             tempCapOutILimit = MIN_CAP_IOUT;
             tempCapInILimit  = 4.0f;
@@ -821,7 +828,7 @@ static inline void updateStatus()
     else
         Status::status.chassisPowerLimit = tempData.baseRefereePower + SampleManager::ProcessedData::processedData.vBSide * I_LIMIT * 0.8f;
 
-    if (Status::status.communicationTimeoutCnt++ >= 500)
+    if (Status::status.communicationTimeoutCnt++ >= 500)    //通信超时，就设回默认值
     {
         ControlData::controlData.energyRemain      = ENERGY_BUFFER;
         ControlData::controlData.refereePowerLimit = DEFAULT_REFEREE_POWER;
