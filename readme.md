@@ -115,6 +115,15 @@ Ozone(推荐) + JLink
 - 正常模式下，只接超电模组不会使系统工作也不会打开输出；但调试模式下会。
 - 电容组放电至低于5V时，功率限制失效？-->电容组输出电流在`updateVIP()`中受到`CAP_V_CUTOFF`限制，限制到`MIN_CAP_IOUT = 0.1f`![SupCap_LowVoltage_Curve.png](Docs/SupCap_LowVoltage_Curve.png)
 
+## 相关波形
+
+### UCC27201引脚波形
+
+- HS脚（SW）波形 ![ucc27201_HS.png](Docs/ucc27201_HS.png)
+- HB脚（bootstrap cap）波形 ![ucc27201_HB.png](Docs/ucc27201_HB.jpg)
+- HO脚波形 ![ucc27201_HO.png](Docs/ucc27201_HO.png)
+- LO脚波形 ![ucc27201_LO.png](Docs/ucc27201_LO.png)
+
 ## 原港科大开源链接
 
 RM2023-SuperCapacitor[这里](https://github.com/hkustenterprize/RM2023-SuperCapacitor)

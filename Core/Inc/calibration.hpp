@@ -4,7 +4,7 @@
 #error "please specify hardware id"
 #endif
 
-// #define CALIBRATION_MODE
+#define CALIBRATION_MODE
 #define IGNORE_CAPACITOR_ERROR
 
 #if (HARDWARE_ID == -1)
